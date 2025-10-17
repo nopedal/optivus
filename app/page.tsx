@@ -1,103 +1,264 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useSonner } from '@/hooks/use-sonner';
+import { useAuth } from '@/contexts/auth-context';
+import { 
+  getUserFiles, getUserFolders, uploadFile, starFile, deleteFile, createFolder, FileItem, FolderItem 
+} from '@/lib/supabase';
+import FileList from '@/components/FileList';
+import FileUpload from '@/components/FileUpload';
+import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
 
 export default function Home() {
+  // State
+  const [files, setFiles] = useState<FileItem[]>([]);
+  const [folders, setFolders] = useState<FolderItem[]>([]);
+  const [activeTab, setActiveTab] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [storageUsed, setStorageUsed] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentFolder, setCurrentFolder] = useState<{id: string, name: string} | null>(null);
+  
+  const { toast } = useSonner();
+  const { user, signOut } = useAuth();
+  
+  // Use the authenticated user ID
+  const userId = user?.id || '';
+  
+  // Fetch files and folders on mount or when folder/tab changes
+  useEffect(() => {
+    // Skip if no user is authenticated
+    if (!userId) return;
+    
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Determine which files to load based on the active tab
+        let loadedFiles: FileItem[] = [];
+        
+        switch (activeTab) {
+          case 'starred':
+            loadedFiles = await getUserFiles(userId, currentFolder?.id || null, true);
+            break;
+          case 'recent':
+            loadedFiles = await getUserFiles(userId, currentFolder?.id || null, false, 'recent');
+            break;
+          default:
+            loadedFiles = await getUserFiles(userId, currentFolder?.id || null);
+            break;
+        }
+        
+        // Load folders for current location
+        const loadedFolders = await getUserFolders(userId, currentFolder?.id || null);
+        
+        setFiles(loadedFiles);
+        setFolders(loadedFolders);
+        
+        // Calculate storage used
+        const totalStorage = loadedFiles.reduce((total, file) => total + file.size, 0);
+        setStorageUsed(totalStorage);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        toast({
+          title: "Failed to load data",
+          description: "Could not retrieve your files and folders.",
+          variant: "error"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [userId, currentFolder, activeTab, toast]);
+  
+  // Handle file upload
+  const handleUploadFiles = async (uploadedFiles: File[]) => {
+    try {
+      // Upload files to Supabase storage
+      const uploadPromises = uploadedFiles.map(file => 
+        uploadFile(file, userId, currentFolder?.id || null)
+      );
+      
+      const newFiles = await Promise.all(uploadPromises);
+      
+      // Update state with new files
+      setFiles(prev => [...prev, ...newFiles]);
+      
+      // Update storage used
+      const additionalStorage = newFiles.reduce((total, file) => total + file.size, 0);
+      setStorageUsed(prev => prev + additionalStorage);
+      
+      toast({
+        title: "Files uploaded successfully",
+        description: `${uploadedFiles.length} file(s) have been uploaded.`,
+        variant: "success"
+      });
+      
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your files.",
+        variant: "error"
+      });
+    }
+  };
+  
+  // Handle file starring
+  const handleStarFile = async (fileId: string, isStarred: boolean) => {
+    try {
+      await starFile(fileId, !isStarred);
+      
+      setFiles(prev => 
+        prev.map(file => 
+          file.id === fileId ? {...file, starred: !isStarred} : file
+        )
+      );
+      
+      toast({
+        title: isStarred ? "Removed from starred" : "Added to starred",
+        description: `File has been ${isStarred ? 'removed from' : 'added to'} starred files.`,
+        variant: "success"
+      });
+    } catch (error) {
+      console.error('Error starring file:', error);
+      toast({
+        title: "Operation failed",
+        description: "Could not update the file status.",
+        variant: "error"
+      });
+    }
+  };
+  
+  // Handle file deletion
+  const handleDeleteFile = async (fileId: string, path: string) => {
+    try {
+      const fileToDelete = files.find(file => file.id === fileId);
+      
+      if (fileToDelete) {
+        await deleteFile(fileId, path);
+        
+        setFiles(prev => prev.filter(file => file.id !== fileId));
+        setStorageUsed(prev => prev - fileToDelete.size);
+        
+        toast({
+          title: "File deleted",
+          description: `${fileToDelete.name} has been deleted.`,
+          variant: "success"
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast({
+        title: "Delete failed",
+        description: "Could not delete the file.",
+        variant: "error"
+      });
+    }
+  };
+  
+  // Handle folder creation
+  const handleCreateFolder = async () => {
+    const folderName = prompt('Enter folder name:');
+    
+    if (folderName && folderName.trim() !== '') {
+      try {
+        const newFolder = await createFolder(folderName, userId, currentFolder?.id || null);
+        
+        setFolders(prev => [...prev, newFolder]);
+        
+        toast({
+          title: "Folder created",
+          description: `${folderName} has been created.`,
+          variant: "success"
+        });
+      } catch (error) {
+        console.error('Error creating folder:', error);
+        toast({
+          title: "Failed to create folder",
+          description: "Could not create the folder.",
+          variant: "error"
+        });
+      }
+    }
+  };
+  
+  // Handle folder navigation
+  const handleFolderClick = (folderId: string) => {
+    const folder = folders.find(f => f.id === folderId);
+    if (folder) {
+      setCurrentFolder({ id: folder.id, name: folder.name });
+    }
+  };
+  
+  // Handle navigation back
+  const handleNavigateBack = () => {
+    setCurrentFolder(null);
+  };
+  
+  // Filter files based on searchQuery
+  const filteredFiles = files.filter(file => {
+    if (searchQuery && !file.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    return true;
+  });
+  
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast({
+        title: "Logout failed",
+        description: "Failed to log out. Please try again.",
+        variant: "error"
+      });
+    }
+  };
+  
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden">
+      <Sidebar 
+        storageUsed={storageUsed}
+        folders={folders}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onFolderClick={handleFolderClick}
+        onCreateFolder={handleCreateFolder}
+        onLogout={handleLogout}
+      />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header 
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onCreateFolder={handleCreateFolder}
+          onUploadFile={() => document.getElementById('file-upload-input')?.click()}
+          currentFolder={currentFolder}
+          onNavigateBack={handleNavigateBack}
+          userName={user?.email || 'User'}
+          userAvatar={user?.user_metadata?.avatar_url}
         />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        
+        <main className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-900">
+          <FileUpload 
+            onUploadFiles={handleUploadFiles}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+          
+          <FileList 
+            files={filteredFiles}
+            isLoading={isLoading}
+            onStarFile={handleStarFile}
+            onDeleteFile={handleDeleteFile}
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </main>
+      </div>
     </div>
   );
 }
