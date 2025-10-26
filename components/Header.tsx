@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Plus, Bell, ChevronLeft, FolderPlus, Upload, Settings, Menu } from 'lucide-react';
+import { Search, Plus, Bell, ChevronLeft, FolderPlus, Upload, Settings, Menu, RefreshCw, LayoutDashboard } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,6 +20,7 @@ type HeaderProps = {
   onSearchChange?: (query: string) => void;
   onCreateFolder?: () => void;
   onUploadFile?: () => void;
+  onRefresh?: () => void;
   currentFolder?: {
     id: string;
     name: string;
@@ -36,6 +37,7 @@ const Header = ({
   onSearchChange,
   onCreateFolder,
   onUploadFile,
+  onRefresh,
   currentFolder,
   onNavigateBack,
   userAvatar,
@@ -125,6 +127,25 @@ const Header = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={onRefresh}
+            className="bg-background/50 border-border/60 hover:bg-background"
+            title="Refresh files"
+          >
+            <RefreshCw className="h-4 w-4 text-foreground/70" />
+          </Button>
+
+          <Button
+            variant="outline"
+            className="bg-background/50 border-border/60 hover:bg-background hidden md:flex"
+            onClick={() => window.location.href = '/dashboard'}
+          >
+            <LayoutDashboard className="h-4 w-4 mr-2 text-foreground/70" />
+            Dashboard
+          </Button>
           
           <Button 
             variant="outline" 

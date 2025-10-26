@@ -12,12 +12,14 @@ type FileUploadProps = {
   onUploadFiles?: (files: File[]) => Promise<void>;
   isUploading?: boolean;
   maxSize?: number;
+  onClose?: () => void;
 };
 
 const FileUpload = ({ 
   onUploadFiles, 
   isUploading = false,
-  maxSize = 100 * 1024 * 1024 // 100MB default
+  maxSize = 100 * 1024 * 1024, // 100MB default
+  onClose
 }: FileUploadProps) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -101,40 +103,55 @@ const FileUpload = ({
   
   if (isUploading || uploadProgress > 0) {
     return (
-      <Card className="w-full mb-6 border-border/60 shadow-md bg-gradient-to-br from-card to-primary/5">
-        <CardContent className="p-6">
+      <Card className="w-full border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-br from-white to-blue-50/30 dark:from-slate-800/80 dark:to-blue-900/10 backdrop-blur-sm shadow-lg">
+        <CardContent className="p-8">
           <div className="flex flex-col items-center">
             {uploadComplete ? (
               <>
-                <div className="rounded-full bg-green-100 dark:bg-green-900/30 p-3 mb-3">
-                  <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
+                <div className="relative mb-6">
+                  <div className="rounded-2xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 p-4 ring-4 ring-green-200/50 dark:ring-green-800/50">
+                    <Check className="h-10 w-10 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="absolute -top-1 -right-1">
+                    <div className="h-6 w-6 bg-green-500 rounded-full flex items-center justify-center animate-bounce">
+                      <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-lg font-semibold text-foreground mb-1">Upload complete!</p>
-                <p className="text-sm text-muted-foreground">
-                  {selectedFiles.length} file(s) uploaded successfully
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">Upload complete!</h3>
+                <p className="text-slate-600 dark:text-slate-400 text-center">
+                  Successfully uploaded {selectedFiles.length} file{selectedFiles.length !== 1 ? 's' : ''} to your workspace
                 </p>
               </>
             ) : (
               <>
-                <div className="relative mb-3">
-                  <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                  <div className="absolute inset-0 h-10 w-10 rounded-full bg-primary/20 animate-ping" />
+                <div className="relative mb-6">
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-spin" />
+                  </div>
+                  <div className="absolute inset-0 h-16 w-16 rounded-2xl bg-blue-500/20 animate-ping" />
                 </div>
-                <p className="text-lg font-semibold text-foreground mb-1">Uploading files...</p>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {selectedFiles.length} file(s) • {uploadProgress.toFixed(0)}% complete
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Uploading files</h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-6 text-center">
+                  Processing {selectedFiles.length} file{selectedFiles.length !== 1 ? 's' : ''} • {uploadProgress.toFixed(0)}% complete
                 </p>
               </>
             )}
-            <div className="w-full mt-2">
+            <div className="w-full max-w-md">
               <Progress 
                 value={uploadProgress} 
-                className="h-2.5 bg-muted"
-                indicatorClassName={uploadComplete ? 'bg-green-500' : 'bg-primary'}
+                className="h-3 bg-slate-200 dark:bg-slate-700"
+                indicatorClassName={uploadComplete ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-blue-500 to-indigo-500'}
               />
-              <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                <span>{formatFileSize(selectedFiles.reduce((acc, f) => acc + f.size, 0))}</span>
-                <span>{uploadProgress.toFixed(0)}%</span>
+              <div className="flex justify-between mt-3 text-sm">
+                <span className="text-slate-600 dark:text-slate-400 font-medium">
+                  {formatFileSize(selectedFiles.reduce((acc, f) => acc + f.size, 0))}
+                </span>
+                <span className="text-slate-900 dark:text-slate-100 font-semibold">
+                  {uploadProgress.toFixed(0)}%
+                </span>
               </div>
             </div>
           </div>
@@ -144,55 +161,82 @@ const FileUpload = ({
   }
   
   return (
-    <div className="w-full mb-6">
-      <Card className="border-border/60 shadow-md overflow-hidden">
+    <div className="w-full">
+      <Card className="border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-lg overflow-hidden relative">
+        {onClose && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="absolute top-4 right-4 z-10 h-8 w-8 rounded-full bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 shadow-sm"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
         <div
           {...getRootProps()}
-          className={`relative border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 ease-in-out ${
+          className={`relative border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ease-out ${
             isDragActive 
-              ? 'border-primary bg-primary/10 scale-[1.02]' 
+              ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 scale-[1.01] shadow-xl' 
               : isDragReject
-              ? 'border-destructive bg-destructive/10'
-              : 'border-border hover:border-primary hover:bg-primary/5 hover:shadow-lg'
+              ? 'border-red-400 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20'
+              : 'border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50/50 hover:to-indigo-50/50 dark:hover:from-blue-900/10 dark:hover:to-indigo-900/10 hover:shadow-lg'
           }`}
         >
           <input {...getInputProps()} id="file-upload-input" />
           
-          <div className={`rounded-full p-4 mb-4 transition-all ${
+          <div className={`rounded-2xl p-6 mb-6 transition-all duration-300 ${
             isDragActive 
-              ? 'bg-primary/20 ring-4 ring-primary/20' 
-              : 'bg-primary/10'
+              ? 'bg-blue-100 dark:bg-blue-900/40 ring-4 ring-blue-200/50 dark:ring-blue-800/50 scale-110' 
+              : 'bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/20'
           }`}>
             <Upload 
-              className={`h-10 w-10 transition-all ${
-                isDragActive ? 'text-primary scale-110' : 'text-primary/70'
+              className={`h-12 w-12 transition-all duration-300 ${
+                isDragActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-blue-500'
               }`} 
             />
           </div>
           
-          <p className="text-center text-base font-semibold text-foreground mb-1">
-            {isDragActive
-              ? 'Drop the files here...'
-              : 'Drag & drop files here'}
-          </p>
-          <p className="text-center text-sm text-muted-foreground mb-3">
-            or click to browse your computer
-          </p>
+          <div className="text-center mb-6">
+            <h3 className={`text-xl font-bold mb-2 transition-colors ${
+              isDragActive 
+                ? 'text-blue-700 dark:text-blue-300' 
+                : 'text-slate-900 dark:text-slate-100'
+            }`}>
+              {isDragActive
+                ? 'Drop your files here'
+                : 'Upload your files'}
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+              Drag and drop files here, or{' '}
+              <span className="font-medium text-blue-600 dark:text-blue-400">click to browse</span>
+              {' '}your computer
+            </p>
+          </div>
           
-          <div className="flex gap-2 items-center">
-            <Badge variant="secondary" className="text-xs">
+          <div className="flex gap-3 items-center flex-wrap justify-center">
+            <Badge variant="secondary" className="text-xs px-3 py-1.5 bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+              <svg className="h-3 w-3 mr-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 2.25h4.125c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125H8.25m0 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
               Any file type
             </Badge>
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs px-3 py-1.5 bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">
+              <svg className="h-3 w-3 mr-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               Max {formatFileSize(maxSize)}
             </Badge>
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs px-3 py-1.5 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
+              <svg className="h-3 w-3 mr-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 0016.5 1.875h-1.875A3.375 3.375 0 0011.25 5.25v1.875a1.125 1.125 0 01-1.125 1.125H8.25A3.375 3.375 0 005.25 11.25v1.875" />
+              </svg>
               Multiple files
             </Badge>
           </div>
           
           {isDragActive && (
-            <div className="absolute inset-0 border-2 border-primary rounded-lg bg-primary/5 animate-pulse" />
+            <div className="absolute inset-0 border-2 border-blue-400 rounded-xl bg-gradient-to-br from-blue-100/80 to-indigo-100/80 dark:from-blue-900/40 dark:to-indigo-900/40 backdrop-blur-sm animate-pulse" />
           )}
         </div>
       </Card>
