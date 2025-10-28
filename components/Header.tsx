@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Plus, Bell, ChevronLeft, FolderPlus, Upload, Settings, Menu, RefreshCw, LayoutDashboard } from 'lucide-react';
+import { Search, Plus, Bell, ChevronLeft, FolderPlus, Upload, Settings, Menu, RefreshCw, LayoutDashboard, MessageSquare } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +21,8 @@ type HeaderProps = {
   onCreateFolder?: () => void;
   onUploadFile?: () => void;
   onRefresh?: () => void;
+  onToggleSidebar?: () => void;
+  onToggleChat?: () => void;
   currentFolder?: {
     id: string;
     name: string;
@@ -29,7 +31,6 @@ type HeaderProps = {
   userName?: string;
   userAvatar?: string;
   onLogout?: () => void;
-  onToggleSidebar?: () => void;
 };
 
 const Header = ({ 
@@ -38,12 +39,13 @@ const Header = ({
   onCreateFolder,
   onUploadFile,
   onRefresh,
+  onToggleSidebar,
+  onToggleChat,
   currentFolder,
   onNavigateBack,
   userAvatar,
   userName = "User",
-  onLogout,
-  onToggleSidebar
+  onLogout
 }: HeaderProps) => {
   const userInitials = userName
     .split(' ')
@@ -145,6 +147,16 @@ const Header = ({
           >
             <LayoutDashboard className="h-4 w-4 mr-2 text-foreground/70" />
             Dashboard
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={onToggleChat}
+            className="bg-background/50 border-border/60 hover:bg-background"
+            title="Chat with AI"
+          >
+            <MessageSquare className="h-4 w-4 text-foreground/70" />
           </Button>
           
           <Button 

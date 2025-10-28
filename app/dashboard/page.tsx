@@ -11,6 +11,7 @@ import { getUserFiles, getUserFolders, FileItem } from "@/lib/supabase"
 import Link from "next/link"
 import Header from "@/components/Header"
 import { useRouter } from "next/navigation"
+import { useChat } from '@/contexts/chat-context'
 
 interface StorageCategory {
   type: string
@@ -21,6 +22,7 @@ interface StorageCategory {
 
 export default function DashboardPage() {
   const router = useRouter()
+  const { toggleChat } = useChat()
   const [storageStats, setStorageStats] = useState({
     total: 100 * 1024 * 1024 * 1024, // 100 GB in bytes
     used: 0,
@@ -114,6 +116,7 @@ export default function DashboardPage() {
       <Header 
         userName="User"
         onSearchChange={(q) => console.log(q)}
+        onToggleChat={toggleChat}
       />
       
       <div className="container mx-auto p-6">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSonner } from '@/hooks/use-sonner';
 import { useAuth } from '@/contexts/auth-context';
+import { useChat } from '@/contexts/chat-context';
 import { 
   getUserFiles, getUserFolders, uploadFile, starFile, deleteFile, createFolder, FileItem, FolderItem 
 } from '@/lib/supabase';
@@ -31,6 +32,7 @@ export default function Home() {
   
   const { toast } = useSonner();
   const { user, signOut, isLoading: authLoading } = useAuth();
+  const { toggleChat } = useChat();
   
   // Use the authenticated user ID
   const userId = user?.id || '';
@@ -54,44 +56,15 @@ export default function Home() {
     }
     
     let isSubscribed = true; // Track if component is mounted
-    let retryCount = 0;
-    const MAX_RETRIES = 3;
-    const RETRY_DELAY = 2000; // 2 seconds
     
     const loadData = async () => {
       try {
         if (!isSubscribed) return;
         setIsLoading(true);
         
-        // Set a timeout to prevent infinite loading
-        const timeout = setTimeout(() => {
-          if (!isSubscribed) return;
-          
-          if (retryCount < MAX_RETRIES) {
-            console.log(`Retrying load attempt ${retryCount + 1}/${MAX_RETRIES}...`);
-            retryCount++;
-            clearTimeout(timeout);
-            setTimeout(loadData, RETRY_DELAY);
-            return;
-          }
-          
-          console.warn('Loading timeout reached after retries, stopping load');
-          setIsLoading(false);
-          setFiles([]);
-          setFolders([]);
-          toast({
-            title: "Loading timeout",
-            description: "Unable to load files. Please check your connection and try refreshing.",
-            variant: "error"
-          });
-        }, 5000); // 5 second timeout per attempt
-        
-        setLoadTimeout(timeout);
-        
         // Check if user is authenticated
         if (!userId) {
           console.log('No user ID available, stopping load');
-          clearTimeout(timeout);
           setFiles([]);
           setFolders([]);
           setIsLoading(false);
@@ -148,6 +121,8 @@ export default function Home() {
         console.log('Loaded files:', loadedFiles?.length || 0);
         console.log('Loaded folders:', loadedFolders?.length || 0);
         
+        if (!isSubscribed) return; // Component unmounted
+        
         setFiles(loadedFiles || []);
         setFolders(loadedFolders || []);
         
@@ -155,28 +130,23 @@ export default function Home() {
         const totalStorage = (loadedFiles || []).reduce((total, file) => total + file.size, 0);
         setStorageUsed(totalStorage);
         
-        // Clear timeout since we succeeded
-        if (loadTimeout) {
-          clearTimeout(loadTimeout);
-          setLoadTimeout(null);
-        }
       } catch (error) {
         console.error('Error loading data:', error);
-        // Clear timeout
-        if (loadTimeout) {
-          clearTimeout(loadTimeout);
-          setLoadTimeout(null);
-        }
+        if (!isSubscribed) return;
+        
         // Set empty arrays to stop loading state
         setFiles([]);
         setFolders([]);
+        
         toast({
           title: "Failed to load data",
-          description: "Could not retrieve your files and folders. Please check your authentication and try again.",
+          description: "Could not retrieve your files and folders. Please check your connection and try refreshing.",
           variant: "error"
         });
       } finally {
-        setIsLoading(false);
+        if (isSubscribed) {
+          setIsLoading(false);
+        }
       }
     };
     
@@ -185,9 +155,6 @@ export default function Home() {
     
     return () => {
       isSubscribed = false;
-      if (loadTimeout) {
-        clearTimeout(loadTimeout);
-      }
     };
   }, [userId, currentFolder?.id, activeTab, authLoading]);
 
@@ -573,6 +540,7 @@ export default function Home() {
           userName={userName}
           onLogout={handleLogout}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          onToggleChat={toggleChat}
         />        <main className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-transparent to-slate-50/30 dark:to-slate-900/30">
           <div className="max-w-7xl mx-auto space-y-6">
             {(!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) && (
