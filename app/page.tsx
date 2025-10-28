@@ -26,7 +26,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [currentFolder, setCurrentFolder] = useState<{id: string, name: string} | null>(null);
-  const [loadTimeout, setLoadTimeout] = useState<NodeJS.Timeout | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   

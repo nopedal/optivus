@@ -41,15 +41,16 @@ const DatabaseTester = () => {
         const result = await Promise.race([
           connectionPromise,
           timeoutPromise
-        ]) as { data: any, error: any };
+        ]);
         
-        const { data: healthCheck, error: healthError } = result;
+        const healthError = (result as { error?: Error })?.error;
       
         if (healthError) {
+          const errorMessage = healthError?.message || 'Unknown error';
           if (retryCount < MAX_RETRIES && 
-              (healthError.message.includes('timeout') || 
-               healthError.message.includes('network') ||
-               healthError.message.includes('connection'))) {
+              (errorMessage.includes('timeout') || 
+               errorMessage.includes('network') ||
+               errorMessage.includes('connection'))) {
             retryCount++;
             addResult(`[RETRY] Connection failed, attempt ${retryCount}/${MAX_RETRIES}...`);
             await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
@@ -57,8 +58,8 @@ const DatabaseTester = () => {
             return;
           }
           
-          addResult(`[FAIL] Connection failed: ${healthError.message}`);
-          if (healthError.message.includes('relation "files" does not exist')) {
+          addResult(`[FAIL] Connection failed: ${errorMessage}`);
+          if (errorMessage.includes('relation "files" does not exist')) {
             addResult('[FAIL] Files table does not exist. Please create it.');
           }
           return; // Exit early on error
@@ -76,7 +77,7 @@ const DatabaseTester = () => {
 
         // Test 3: Try to create tables check
         addResult('Testing folders table...');
-        const { data: foldersCheck, error: foldersError } = await supabase
+        const { error: foldersError } = await supabase
           .from('folders')
           .select('count')
           .limit(0);
@@ -130,7 +131,7 @@ const DatabaseTester = () => {
                   Having loading issues? Test your database connection.
                 </p>
                 <p className="text-xs text-amber-600 dark:text-amber-400">
-                  We'll automatically retry loading a few times if there are connection issues.
+                  We&apos;ll automatically retry loading a few times if there are connection issues.
                 </p>
               </div>
             </div>
@@ -197,7 +198,7 @@ const DatabaseTester = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 14.5M9.75 3.104L19.8 14.5m0 0l-5.25 5.25a2.25 2.25 0 01-1.591.659H11.25a2.25 2.25 0 01-1.591-.659L4.5 14.5m15.3 0a2.25 2.25 0 01-.659 1.591L13.8 21.35a2.25 2.25 0 01-1.591.659" />
                 </svg>
               </div>
-              <p className="text-slate-500 dark:text-slate-400 text-sm">Click "Run Test" to check your database connection</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">Click &quot;Run Test&quot; to check your database connection</p>
             </div>
           ) : (
             <div className="space-y-2">

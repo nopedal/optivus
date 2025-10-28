@@ -54,21 +54,7 @@ const Sidebar = ({
     trash: 0
   }
 }: SidebarProps) => {
-  const formatStorageUsed = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
   const storagePercentage = (storageUsed / maxStorage) * 100;
-  
-  const getProgressColor = () => {
-    if (storagePercentage >= 90) return "bg-destructive";
-    if (storagePercentage >= 75) return "bg-amber-500";
-    return "bg-primary/80";
-  };
 
   return (
     <div className="w-64 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-r border-slate-200/60 dark:border-slate-700/60 flex flex-col h-full shadow-lg">

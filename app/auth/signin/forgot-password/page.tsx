@@ -22,8 +22,8 @@ export default function ForgotPassword() {
     try {
       await resetPassword(email);
       setIsSubmitted(true);
-    } catch (error: any) {
-      setError(error.message || 'Failed to send reset password email');
+    } catch (error: unknown) {
+      setError((error as Error).message || 'Failed to send reset password email');
     } finally {
       setIsLoading(false);
     }
@@ -38,7 +38,7 @@ export default function ForgotPassword() {
             Reset your password
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Enter your email address and we'll send you a link to reset your password
+            Enter your email address and we&apos;ll send you a link to reset your password
           </p>
         </div>
         
@@ -52,7 +52,7 @@ export default function ForgotPassword() {
               </div>
               <h3 className="mt-3 text-xl font-medium text-gray-900 dark:text-gray-100">Check your inbox</h3>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                We've sent a password reset link to <span className="font-medium">{email}</span>.
+                We&apos;ve sent a password reset link to <span className="font-medium">{email}</span>.
                 <br />
                 Click the link in the email to create a new password.
               </p>

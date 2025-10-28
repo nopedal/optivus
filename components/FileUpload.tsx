@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, FileRejection } from 'react-dropzone';
 import { Upload, Loader2, X, Check, AlertCircle, FileIcon, Image as ImageIcon, Film, Music } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -26,7 +26,7 @@ const FileUpload = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [uploadComplete, setUploadComplete] = useState(false);
   
-  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
     if (rejectedFiles.length > 0) {
       const errors = rejectedFiles.map(file => file.errors[0]?.message || 'Invalid file').join(', ');
       setErrorMessage(`Some files were rejected: ${errors}`);
@@ -82,7 +82,7 @@ const FileUpload = ({
         setUploadComplete(false);
       }, 2500);
       
-    } catch (error) {
+    } catch {
       setErrorMessage("Upload failed. Please try again.");
       setUploadProgress(0);
       setUploadComplete(false);

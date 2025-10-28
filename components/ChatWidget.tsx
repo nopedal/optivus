@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, X, Send, Loader2, Bot, User } from 'lucide-react';
+import { X, Send, Loader2, Bot, User } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 type Message = {

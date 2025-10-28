@@ -3,9 +3,7 @@
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Bell, Shield, HardDrive, Mail, Moon, Sun, Globe, Lock } from "lucide-react"
+import { Bell, Shield, Moon, Sun, Globe, Lock } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -21,7 +21,7 @@ export default function SignIn() {
     
     try {
       await signIn(email, password);
-    } catch (error) {
+    } catch {
       // Error is already handled by the auth context
     }
   };
@@ -36,7 +36,7 @@ export default function SignIn() {
             </h1>
           </Link>
           <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link 
               href="/auth/signup" 
               className="font-semibold text-neutral-900 dark:text-neutral-100 hover:underline underline-offset-4"

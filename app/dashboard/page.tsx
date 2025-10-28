@@ -6,9 +6,7 @@ import { Progress } from "@/components/ui/progress"
 import FileList from "@/components/FileList"
 import { useEffect, useState } from "react"
 import { Upload, Download, Users, HardDrive, FileImage, FileText, Film, Music, ArrowLeft } from 'lucide-react'
-import { Badge } from "@/components/ui/badge"
-import { getUserFiles, getUserFolders, FileItem } from "@/lib/supabase"
-import Link from "next/link"
+import { getUserFiles, getUserFolders } from "@/lib/supabase"
 import Header from "@/components/Header"
 import { useRouter } from "next/navigation"
 import { useChat } from '@/contexts/chat-context'
@@ -16,7 +14,7 @@ import { useChat } from '@/contexts/chat-context'
 interface StorageCategory {
   type: string
   size: number
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   extensions: string[]
 }
 
@@ -67,7 +65,6 @@ export default function DashboardPage() {
     const loadData = async () => {
       try {
         const userFiles = await getUserFiles('')
-        const userFolders = await getUserFolders('')
         
         setFiles(userFiles)
         

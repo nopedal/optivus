@@ -32,11 +32,11 @@ export async function retry<T>(
   }
 }
 
-export function isNetworkError(error: any): boolean {
+export function isNetworkError(error: unknown): boolean {
   return (
-    error?.message?.includes('network') ||
-    error?.message?.includes('timeout') ||
-    error?.message?.includes('connection') ||
-    error?.message?.includes('unreachable')
+    (error as Error)?.message?.includes('network') ||
+    (error as Error)?.message?.includes('timeout') ||
+    (error as Error)?.message?.includes('connection') ||
+    (error as Error)?.message?.includes('unreachable')
   );
 }

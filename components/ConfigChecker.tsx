@@ -42,7 +42,7 @@ const ConfigChecker = () => {
       if (newStatus.envVars) {
         // Check Supabase connection
         try {
-          const { data, error } = await supabase.from('files').select('count').limit(1);
+          const { error } = await supabase.from('files').select('count').limit(1);
           newStatus.supabaseConnection = !error;
           newStatus.filesTable = !error;
         } catch (error) {
@@ -51,7 +51,7 @@ const ConfigChecker = () => {
 
         // Check folders table
         try {
-          const { data, error } = await supabase.from('folders').select('count').limit(1);
+          const { error } = await supabase.from('folders').select('count').limit(1);
           newStatus.foldersTable = !error;
         } catch (error) {
           console.error('Folders table error:', error);

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { 
-  FileIcon, FolderIcon, Star, Download, Trash2, MoreHorizontal, Loader2, 
+  FileIcon, Star, Download, Trash2, MoreHorizontal, Loader2, 
   FileImage, FileText, Film, Music, Archive, FileSpreadsheet, Presentation,
   ExternalLink, Copy, Share2, Eye
 } from 'lucide-react';

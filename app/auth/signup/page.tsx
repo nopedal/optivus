@@ -56,7 +56,7 @@ export default function SignUp() {
       setTimeout(() => {
         router.push('/auth/signin');
       }, 3000);
-    } catch (error) {
+    } catch {
       // Error is already handled by the auth context
     }
   };
@@ -75,7 +75,7 @@ export default function SignUp() {
               </h2>
               <p className="text-neutral-600 dark:text-neutral-400 max-w-sm">
                 Check your email for a confirmation link to activate your account. 
-                You'll be redirected to sign in shortly.
+                You&apos;ll be redirected to sign in shortly.
               </p>
               <Loader2 className="h-6 w-6 animate-spin text-neutral-600 dark:text-neutral-400" />
             </div>
