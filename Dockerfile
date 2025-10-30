@@ -27,7 +27,7 @@ COPY --from=builder /app/public ./public
 
 # (Optional) copy environment files if you want them baked into the image
 # COPY --from=builder /app/.env.production ./.env.production
-COPY --from=builder /app/.env.local ./.env.local
+COPY --from=builder .env.local ./.env.local
 
 EXPOSE 3000
 
