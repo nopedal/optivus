@@ -32,6 +32,7 @@ COPY --from=builder /app/next.config.js ./next.config.js
 
 # (Optional) copy environment files if you want them baked into the image
 # COPY --from=builder /app/.env.production ./.env.production
+COPY --from=builder /app/.env.local ./.env.local
 
 EXPOSE 3000
 
