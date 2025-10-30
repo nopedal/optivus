@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    # For production don't mount source, build image and run.
+
+  app-dev:
+    build:
+      context: .
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app:cached
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    # Useful for local development inside docker. To use, run:
+    # docker compose up app-dev

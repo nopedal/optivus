@@ -22,7 +22,7 @@ export default function SignIn() {
     try {
       await signIn(email, password);
     } catch {
-      // Error is already handled by the auth context
+      setError('Invalid email or password. Please try again.');
     }
   };
 
