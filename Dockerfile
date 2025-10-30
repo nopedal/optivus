@@ -29,7 +29,7 @@ COPY --from=builder /app/public ./public
 # COPY --from=builder /app/.env.production ./.env.production
 # Copy env files from builder to container root so runtime can read them from /
 COPY --from=builder /app/.env /.env
-COPY --from=builder .env.production /.env.production
+COPY --from=builder /app/.env.production /.env.production
 ENV DOTENV_CONFIG_PATH=/.env.production
 EXPOSE 3000
 
