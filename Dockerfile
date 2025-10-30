@@ -27,8 +27,10 @@ COPY --from=builder /app/public ./public
 
 # (Optional) copy environment files if you want them baked into the image
 # COPY --from=builder /app/.env.production ./.env.production
-COPY --from=builder .env.local ./.env.local
-
+# Copy env files from builder to container root so runtime can read them from /
+COPY --from=builder /app/.env /.env
+COPY --from=builder .env.production /.env.production
+ENV DOTENV_CONFIG_PATH=/.env.production
 EXPOSE 3000
 
 # Use the Next.js start script (defined in package.json as "start": "next start")
